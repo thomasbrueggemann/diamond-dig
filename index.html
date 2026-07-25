@@ -42,53 +42,6 @@ canvas { display: block; }
   min-width: 90px;
 }
 
-#timer-bar-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: rgba(0,0,0,0.5);
-  z-index: 10;
-}
-
-#timer-bar {
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(90deg, #00e5ff, #ffd700);
-  transition: width 0.5s linear, background 0.5s;
-  border-radius: 0 3px 3px 0;
-}
-
-#timer-bar.urgent {
-  background: linear-gradient(90deg, #ff4444, #ff8800);
-  animation: pulse-bar 0.5s ease-in-out infinite;
-}
-
-@keyframes pulse-bar {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-#timer-warning {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none;
-  z-index: 5;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-#timer-warning.show {
-  opacity: 1;
-  animation: warning-flash 0.5s ease-in-out infinite;
-}
-
-@keyframes warning-flash {
-  0%, 100% { box-shadow: inset 0 0 60px rgba(255,0,0,0.3); }
-  50% { box-shadow: inset 0 0 120px rgba(255,0,0,0.6); }
-}
-
 .stat .label {
   font-size: 10px;
   text-transform: uppercase;
@@ -279,20 +232,13 @@ canvas { display: block; }
     <div class="value digs" id="digs-left">30</div>
   </div>
   <div class="stat">
-    <div class="label">Time</div>
-    <div class="value" id="timer-display">90</div>
-  </div>
-  <div class="stat">
     <div class="label">Score</div>
     <div class="value" id="score">0</div>
   </div>
 </div>
 
-<div id="timer-bar-container"><div id="timer-bar"></div></div>
-
 <button id="install-btn" style="position:absolute;top:15px;right:15px;background:linear-gradient(135deg,#ffd700,#ff8c00);border:2px solid #fff;border-radius:12px;padding:10px 18px;font-size:14px;font-weight:bold;color:#1a0a2e;cursor:pointer;z-index:200;min-height:44px;box-shadow:0 2px 12px rgba(255,215,0,0.5);animation:pulse-install 2s ease-in-out infinite;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">📲 Install</button>
 <style>@keyframes pulse-install{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}</style>
-<div id="timer-warning"></div>
 
 <button id="hint-btn" disabled>🔮 Hint (50 pts)</button>
 <div id="proximity-info"></div>
@@ -302,7 +248,7 @@ canvas { display: block; }
 
 <div id="start-screen">
   <h1>💎 Diamond Dig</h1>
-  <div class="subtitle">Use proximity clues and hints to find 8 hidden diamonds — 90 seconds on the clock!</div>
+  <div class="subtitle">Use proximity clues and hints to find 8 hidden diamonds!</div>
   <button id="start-btn">Start Digging</button>
 </div>
 
@@ -339,7 +285,6 @@ const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
 const DIAMOND_COUNT = 8;
 const MAX_DIGS = 30;
 const HINT_COST = 50;
-const GAME_TIME = 90; // seconds
 
 // --- Game State ---
 let diamondsFound = 0;
@@ -355,11 +300,6 @@ let particleSystems = [];
 let hintArrow = null;
 let hintActive = false;
 let hintArrowTarget = null;
-
-// --- Timer ---
-let timeRemaining = GAME_TIME;
-let timeElapsed = 0;
-let timerInterval = null;
 
 // --- Three.js Setup ---
 const scene = new THREE.Scene();
@@ -643,53 +583,6 @@ function digAt(x, z) {
     setTimeout(() => endGame('win'), 1000);
   } else if (digsRemaining <= 0) {
     setTimeout(() => endGame('outofdigs'), 1000);
-  }
-}
-
-// --- Timer ---
-function startTimer() {
-  timeRemaining = GAME_TIME;
-  timeElapsed = 0;
-  updateTimerUI();
-
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    if (!gameStarted) return;
-    timeRemaining--;
-    timeElapsed++;
-    updateTimerUI();
-
-    if (timeRemaining <= 0) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-      endGame('timeout');
-    }
-  }, 1000);
-}
-
-function stopTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-}
-
-function updateTimerUI() {
-  const display = document.getElementById('timer-display');
-  const bar = document.getElementById('timer-bar');
-  const warning = document.getElementById('timer-warning');
-
-  display.textContent = timeRemaining;
-
-  const pct = (timeRemaining / GAME_TIME) * 100;
-  bar.style.width = pct + '%';
-
-  if (timeRemaining <= 15) {
-    bar.classList.add('urgent');
-    warning.classList.add('show');
-  } else {
-    bar.classList.remove('urgent');
-    warning.classList.remove('show');
   }
 }
 
@@ -988,7 +881,6 @@ function animate() {
 // --- End Game ---
 function endGame(reason) {
   gameStarted = false;
-  stopTimer();
 
   const endScreen = document.getElementById('end-screen');
   const endTitle = document.getElementById('end-title');
@@ -998,14 +890,10 @@ function endGame(reason) {
   document.getElementById('end-score').textContent = score;
   const accuracy = digsMade > 0 ? Math.round((diamondsFound / digsMade) * 100) : 0;
   document.getElementById('end-accuracy').textContent = accuracy + '%';
-  document.getElementById('end-time').textContent = timeRemaining + 's';
 
   if (reason === 'win') {
     endTitle.textContent = '🎉 You Won!';
-    endSub.textContent = `All diamonds found with ${timeRemaining}s left!`;
-  } else if (reason === 'timeout') {
-    endTitle.textContent = '⏰ Time\'s Up!';
-    endSub.textContent = `${DIAMOND_COUNT - diamondsFound} diamond${DIAMOND_COUNT - diamondsFound > 1 ? 's' : ''} remaining`;
+    endSub.textContent = 'All diamonds found!';
   } else {
     endTitle.textContent = '💨 Out of Digs!';
     endSub.textContent = `${DIAMOND_COUNT - diamondsFound} diamond${DIAMOND_COUNT - diamondsFound > 1 ? 's' : ''} remaining`;
@@ -1043,7 +931,6 @@ function startGame() {
   initGrid();
   updateUI();
   gameStarted = true;
-  startTimer();
 }
 
 document.getElementById('start-btn').addEventListener('click', () => {

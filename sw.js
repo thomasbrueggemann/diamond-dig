@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diamond-dig-v1';
+const CACHE_NAME = 'diamond-dig-v2';
 const ASSETS = [
   '/',
   '/index.html',

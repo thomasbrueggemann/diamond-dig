@@ -227,10 +227,7 @@ canvas { display: block; }
     <div class="label">Diamonds</div>
     <div class="value diamonds" id="diamond-count">0</div>
   </div>
-  <div class="stat">
-    <div class="label">Digs Left</div>
-    <div class="value digs" id="digs-left">30</div>
-  </div>
+
   <div class="stat">
     <div class="label">Score</div>
     <div class="value" id="score">0</div>
@@ -283,13 +280,13 @@ const GRID_SIZE = 10;
 const CELL_SIZE = 2;
 const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
 const DIAMOND_COUNT = 8;
-const MAX_DIGS = 30;
+
 const HINT_COST = 50;
 
 // --- Game State ---
 let diamondsFound = 0;
 let digsMade = 0;
-let digsRemaining = MAX_DIGS;
+
 let score = 0;
 let gameStarted = false;
 let grid = []; // 0 = empty, 1 = diamond
@@ -555,10 +552,8 @@ function createHole(x, z, isDiamond) {
 function digAt(x, z) {
   if (!gameStarted) return;
   if (dugCells.has(x + ',' + z)) return;
-  if (digsRemaining <= 0) return;
 
   digsMade++;
-  digsRemaining--;
   dugCells.add(x + ',' + z);
 
   const cellIdx = Math.round((x / CELL_SIZE + (GRID_SIZE - 1) / 2)) +
@@ -581,8 +576,6 @@ function digAt(x, z) {
   // Check game end
   if (diamondsFound >= DIAMOND_COUNT) {
     setTimeout(() => endGame('win'), 1000);
-  } else if (digsRemaining <= 0) {
-    setTimeout(() => endGame('outofdigs'), 1000);
   }
 }
 
@@ -600,7 +593,6 @@ function showMessage(isDiamond) {
 
 function updateUI() {
   document.getElementById('diamond-count').textContent = diamondsFound;
-  document.getElementById('digs-left').textContent = digsRemaining;
   document.getElementById('score').textContent = score;
   document.getElementById('hint-btn').disabled = score < HINT_COST;
 }
@@ -894,9 +886,6 @@ function endGame(reason) {
   if (reason === 'win') {
     endTitle.textContent = '🎉 You Won!';
     endSub.textContent = 'All diamonds found!';
-  } else {
-    endTitle.textContent = '💨 Out of Digs!';
-    endSub.textContent = `${DIAMOND_COUNT - diamondsFound} diamond${DIAMOND_COUNT - diamondsFound > 1 ? 's' : ''} remaining`;
   }
 
   endScreen.classList.remove('hidden');
@@ -907,7 +896,7 @@ function startGame() {
   // Reset state
   diamondsFound = 0;
   digsMade = 0;
-  digsRemaining = MAX_DIGS;
+
   score = 0;
   dugCells = new Set();
   holeMeshes.forEach(h => scene.remove(h));

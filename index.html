@@ -290,7 +290,7 @@ canvas { display: block; }
 
 <div id="timer-bar-container"><div id="timer-bar"></div></div>
 
-<button id="install-btn" class="hidden" style="position:absolute;top:15px;right:15px;background:rgba(255,215,0,0.9);border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:bold;color:#1a0a2e;cursor:pointer;z-index:20;min-height:44px;">📲 Install</button>
+<button id="install-btn" style="position:absolute;top:15px;right:15px;background:rgba(255,215,0,0.9);border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:bold;color:#1a0a2e;cursor:pointer;z-index:200;min-height:44px;">📲 Install</button>
 <div id="timer-warning"></div>
 
 <button id="hint-btn" disabled>🔮 Hint (50 pts)</button>
@@ -1082,35 +1082,93 @@ if ('serviceWorker' in navigator) {
 }
 
 // --- Install Button ---
-const installBtn = document.getElementById('install-btn');
 let deferredPrompt = null;
+const installBtn = document.getElementById('install-btn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show install button
-  if (installBtn) {
-    installBtn.classList.remove('hidden');
-  }
 });
 
-// Hide install button if the app is already installed
 window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
-  if (installBtn) {
-    installBtn.classList.add('hidden');
-  }
 });
 
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('Install prompt outcome:', outcome);
-    deferredPrompt = null;
-    installBtn.classList.add('hidden');
+    if (deferredPrompt) {
+      // Chrome/Edge: show native install prompt
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Install outcome:', outcome);
+      deferredPrompt = null;
+    } else {
+      // Safari or Chrome without prompt: show manual instructions
+      showInstallInstructions();
+    }
   });
+}
+
+function showInstallInstructions() {
+  // Remove any existing overlay
+  const existing = document.getElementById('install-overlay');
+  if (existing) existing.remove();
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isSafari = /Safari/.test(navigator.userAgent) && /Apple/.test(navigator.vendor);
+  const isAndroid = /Android/.test(navigator.userAgent);
+
+  let title, steps;
+  if (isIOS || isSafari) {
+    title = 'Add to Home Screen';
+    steps = [
+      '1. Tap the <strong>Share</strong> button (square with arrow ↑) at the top',
+      '2. Scroll down and tap <strong>Add to Home Screen</strong>',
+      '3. Tap <strong>Add</strong> to confirm'
+    ];
+  } else if (isAndroid) {
+    title = 'Install Diamond Dig';
+    steps = [
+      '1. Tap the <strong>menu</strong> button (⋮) in Chrome',
+      '2. Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>',
+      '3. Tap <strong>Install</strong> to confirm'
+    ];
+  } else {
+    title = 'Install Diamond Dig';
+    steps = [
+      '1. Open the browser menu',
+      '2. Look for <strong>Install</strong> or <strong>Add to Home screen</strong>',
+      '3. Confirm to install'
+    ];
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'install-overlay';
+  overlay.innerHTML = `
+    <div style="
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    ">
+      <div style="
+        background: #1a0a2e; border: 2px solid #ffd700; border-radius: 16px;
+        padding: 24px; max-width: 360px; width: 100%;
+        color: #fff; text-align: center;
+      ">
+        <h3 style="color: #ffd700; margin: 0 0 16px; font-size: 20px;">${title}</h3>
+        <ol style="text-align: left; padding-left: 20px; margin: 0 0 20px; line-height: 1.8;">
+          ${steps.map(s => `<li style="margin-bottom: 8px;">${s}</li>`).join('')}
+        </ol>
+        <button onclick="this.closest('#install-overlay').remove()" style="
+          background: #ffd700; color: #1a0a2e; border: none; border-radius: 10px;
+          padding: 12px 32px; font-size: 16px; font-weight: bold; cursor: pointer;
+          min-height: 48px;
+        ">Got it!</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 }
 
 // --- Start Loop ---

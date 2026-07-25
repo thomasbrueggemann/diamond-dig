@@ -2,21 +2,23 @@
   "name": "Diamond Dig",
   "short_name": "Diamond Dig",
   "description": "A fast-paced digging game — find hidden diamonds before time runs out!",
-  "start_url": "./index.html",
+  "start_url": "/diamond-dig/",
   "display": "standalone",
   "background_color": "#1a0a2e",
   "theme_color": "#ffd700",
   "orientation": "any",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/diamond-dig/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "/diamond-dig/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

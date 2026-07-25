@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Diamond Dig">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="/diamond-dig/manifest.json">
+<link rel="apple-touch-icon" href="/diamond-dig/icon-192.png">
 <title>Diamond Dig</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -289,6 +289,8 @@ canvas { display: block; }
 </div>
 
 <div id="timer-bar-container"><div id="timer-bar"></div></div>
+
+<button id="install-btn" class="hidden" style="position:absolute;top:15px;right:15px;background:rgba(255,215,0,0.9);border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:bold;color:#1a0a2e;cursor:pointer;z-index:20;min-height:44px;">📲 Install</button>
 <div id="timer-warning"></div>
 
 <button id="hint-btn" disabled>🔮 Hint (50 pts)</button>
@@ -1073,19 +1075,43 @@ window.addEventListener('resize', () => {
 // --- Service Worker Registration ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('/diamond-dig/sw.js')
       .then((reg) => console.log('SW registered:', reg.scope))
       .catch((err) => console.error('SW registration failed:', err));
   });
 }
 
-// --- Install Prompt ---
+// --- Install Button ---
+const installBtn = document.getElementById('install-btn');
 let deferredPrompt = null;
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // Show install button if you want one
+  // Show install button
+  if (installBtn) {
+    installBtn.classList.remove('hidden');
+  }
 });
+
+// Hide install button if the app is already installed
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  if (installBtn) {
+    installBtn.classList.add('hidden');
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Install prompt outcome:', outcome);
+    deferredPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+}
 
 // --- Start Loop ---
 animate();

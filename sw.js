@@ -1,7 +1,11 @@
-const CACHE_NAME = 'diamond-dig-v3';
+const CACHE_NAME = 'diamond-dig-v4';
 const ASSETS = [
-  '/',
-  '/index.html',
+  '/diamond-dig/',
+  '/diamond-dig/index.html',
+  '/diamond-dig/manifest.json',
+  '/diamond-dig/sw.js',
+  '/diamond-dig/icon-192.png',
+  '/diamond-dig/icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 ];
 
@@ -31,10 +35,6 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — serve from cache, fall back to network
 self.addEventListener('fetch', (event) => {
-  // Don't intercept manifest — let the browser read it fresh
-  if (event.request.url.endsWith('/manifest.json')) {
-    return;
-  }
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -50,7 +50,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Offline fallback
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match('/diamond-dig/');
         }
       });
     })

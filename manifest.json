@@ -2,7 +2,7 @@
   "name": "Diamond Dig",
   "short_name": "Diamond Dig",
   "description": "A fast-paced digging game — find hidden diamonds before time runs out!",
-  "start_url": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a0a2e",
   "theme_color": "#ffd700",
